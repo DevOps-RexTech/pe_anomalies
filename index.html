@@ -31,7 +31,7 @@
     color: var(--text);
     font-family: 'Syne', sans-serif;
     min-height: 100vh;
-    padding: 40px 32px;
+    padding: 60px 48px;
     background-image:
       radial-gradient(ellipse 80% 50% at 20% 10%, rgba(59,130,246,0.06) 0%, transparent 60%),
       radial-gradient(ellipse 60% 40% at 80% 80%, rgba(6,182,212,0.04) 0%, transparent 60%);
@@ -39,58 +39,58 @@
 
   .header {
     text-align: center;
-    margin-bottom: 48px;
+    margin-bottom: 56px;
   }
   .header h1 {
-    font-size: 28px;
+    font-size: 42px;
     font-weight: 800;
     letter-spacing: -0.5px;
     background: linear-gradient(135deg, #e2e8f0, #3b82f6);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    margin-bottom: 8px;
+    margin-bottom: 12px;
   }
   .header p {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
+    font-size: 16px;
     color: var(--text-dim);
-    letter-spacing: 2px;
+    letter-spacing: 3px;
     text-transform: uppercase;
   }
 
   .legend {
     display: flex;
-    gap: 24px;
+    gap: 36px;
     justify-content: center;
-    margin-bottom: 40px;
+    margin-bottom: 48px;
     flex-wrap: wrap;
   }
   .legend-item {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
+    font-size: 14px;
     color: var(--text-mid);
   }
   .legend-dot {
-    width: 10px; height: 10px;
-    border-radius: 2px;
+    width: 14px; height: 14px;
+    border-radius: 3px;
   }
 
   .arch {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    gap: 20px;
-    max-width: 1100px;
-    margin: 0 auto 32px;
+    gap: 28px;
+    max-width: 1500px;
+    margin: 0 auto 44px;
   }
 
   .layer {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px;
+    border-radius: 14px;
+    padding: 28px;
     position: relative;
     transition: border-color 0.2s;
   }
@@ -98,14 +98,14 @@
 
   .layer-label {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
+    font-size: 14px;
     text-transform: uppercase;
-    letter-spacing: 2px;
+    letter-spacing: 2.5px;
     color: var(--text-dim);
-    margin-bottom: 14px;
+    margin-bottom: 20px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
   }
   .layer-label::after {
     content: '';
@@ -117,12 +117,12 @@
   .service {
     background: var(--surface2);
     border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px 14px;
-    margin-bottom: 10px;
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 14px;
     display: flex;
     align-items: flex-start;
-    gap: 12px;
+    gap: 14px;
     position: relative;
     transition: all 0.2s;
   }
@@ -130,40 +130,40 @@
   .service:hover {
     background: #1f2d44;
     border-color: #2e4a6e;
-    transform: translateX(2px);
+    transform: translateX(3px);
   }
 
   .service-icon {
-    width: 32px; height: 32px;
-    border-radius: 6px;
+    width: 44px; height: 44px;
+    border-radius: 8px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 16px;
+    font-size: 22px;
     flex-shrink: 0;
   }
 
   .service-info { flex: 1; min-width: 0; }
   .service-name {
-    font-size: 13px;
+    font-size: 17px;
     font-weight: 600;
     color: var(--text);
-    margin-bottom: 2px;
+    margin-bottom: 4px;
   }
   .service-desc {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
+    font-size: 13px;
     color: var(--text-dim);
-    line-height: 1.5;
+    line-height: 1.6;
   }
 
   .tag {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 9px;
-    padding: 2px 6px;
-    border-radius: 3px;
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 4px;
     white-space: nowrap;
     flex-shrink: 0;
     align-self: flex-start;
-    margin-top: 1px;
+    margin-top: 2px;
   }
   .tag-lambda { background: rgba(245,158,11,0.15); color: var(--amber); border: 1px solid rgba(245,158,11,0.3); }
   .tag-eks { background: rgba(59,130,246,0.15); color: var(--blue); border: 1px solid rgba(59,130,246,0.3); }
@@ -172,20 +172,20 @@
 
   /* Flow arrows section */
   .flow {
-    max-width: 1100px;
-    margin: 0 auto 32px;
+    max-width: 1500px;
+    margin: 0 auto 44px;
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 24px 28px;
+    border-radius: 14px;
+    padding: 32px 36px;
   }
   .flow-title {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
+    font-size: 14px;
     text-transform: uppercase;
-    letter-spacing: 2px;
+    letter-spacing: 2.5px;
     color: var(--text-dim);
-    margin-bottom: 20px;
+    margin-bottom: 28px;
   }
   .flow-steps {
     display: flex;
@@ -196,68 +196,68 @@
   }
   .flow-step {
     flex: 1;
-    min-width: 120px;
+    min-width: 150px;
     text-align: center;
     position: relative;
   }
   .flow-step:not(:last-child)::after {
     content: '→';
     position: absolute;
-    right: -12px;
+    right: -14px;
     top: 50%;
     transform: translateY(-50%);
     color: var(--blue-dim);
-    font-size: 20px;
+    font-size: 28px;
     z-index: 1;
   }
   .flow-box {
     background: var(--surface2);
     border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px 8px;
-    margin: 0 12px;
+    border-radius: 10px;
+    padding: 16px 12px;
+    margin: 0 16px;
     height: 100%;
   }
   .flow-num {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
+    font-size: 14px;
     color: var(--blue);
     font-weight: 700;
-    margin-bottom: 4px;
+    margin-bottom: 6px;
   }
   .flow-label {
-    font-size: 11px;
+    font-size: 15px;
     font-weight: 600;
     color: var(--text);
-    margin-bottom: 4px;
-    line-height: 1.3;
+    margin-bottom: 6px;
+    line-height: 1.4;
   }
   .flow-tech {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 9px;
+    font-size: 12px;
     color: var(--text-dim);
   }
 
   /* Callout */
   .callout {
-    max-width: 1100px;
+    max-width: 1500px;
     margin: 0 auto;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 16px;
+    gap: 24px;
   }
   .callout-card {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 18px 20px;
-    border-left: 3px solid var(--blue);
+    border-radius: 12px;
+    padding: 24px 28px;
+    border-left: 4px solid var(--blue);
   }
   .callout-card.green { border-left-color: var(--green); }
   .callout-card h3 {
-    font-size: 13px;
+    font-size: 18px;
     font-weight: 700;
-    margin-bottom: 10px;
+    margin-bottom: 14px;
     color: var(--text);
   }
   .callout-card ul {
@@ -265,45 +265,69 @@
   }
   .callout-card ul li {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
+    font-size: 14px;
     color: var(--text-mid);
-    padding: 3px 0;
+    padding: 5px 0;
     display: flex;
     align-items: flex-start;
-    gap: 8px;
-    line-height: 1.5;
+    gap: 10px;
+    line-height: 1.6;
   }
   .callout-card ul li::before {
     content: '▸';
     color: var(--blue);
     flex-shrink: 0;
-    margin-top: 1px;
+    margin-top: 2px;
   }
   .callout-card.green ul li::before { color: var(--green); }
 
   /* Terraform banner */
   .terraform-banner {
-    max-width: 1100px;
-    margin: 0 auto 20px;
+    max-width: 1500px;
+    margin: 0 auto 28px;
     background: linear-gradient(135deg, rgba(139,92,246,0.1), rgba(59,130,246,0.08));
     border: 1px solid rgba(139,92,246,0.25);
-    border-radius: 10px;
-    padding: 14px 20px;
+    border-radius: 12px;
+    padding: 20px 28px;
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 16px;
   }
-  .terraform-banner .icon { font-size: 20px; }
+  .terraform-banner .icon { font-size: 28px; }
   .terraform-banner p {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
+    font-size: 14px;
     color: var(--text-mid);
+    line-height: 1.6;
   }
   .terraform-banner strong { color: var(--purple); }
 
-  @media (max-width: 800px) {
+  /* Footer */
+  .footer {
+    max-width: 1500px;
+    margin: 48px auto 0;
+    text-align: center;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+  .footer p {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+
+  @media (max-width: 1000px) {
     .arch { grid-template-columns: 1fr; }
     .callout { grid-template-columns: 1fr; }
+    body { padding: 32px 20px; }
+    .header h1 { font-size: 30px; }
+    .flow-steps { flex-wrap: wrap; }
+    .flow-step { min-width: 140px; flex: 0 0 calc(33% - 16px); margin-bottom: 16px; }
+    .flow-step:not(:last-child)::after { display: none; }
+  }
+
+  @media (max-width: 600px) {
+    .flow-step { flex: 0 0 calc(50% - 16px); }
   }
 </style>
 </head>
@@ -531,6 +555,10 @@
       <li>Cost: Lambda for these functions = <strong>near zero</strong> vs running extra pods on EKS</li>
     </ul>
   </div>
+</div>
+
+<div class="footer">
+  <p>RexTech LLC · PE Reconciliation Intelligence Platform · Built with AWS EKS, Lambda, Bedrock, Terraform</p>
 </div>
 
 </body>
