@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PE AIOps Architecture</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap');
+
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --border: #1e2d45;
+    --blue: #3b82f6;
+    --blue-dim: #1d4ed8;
+    --cyan: #06b6d4;
+    --green: #10b981;
+    --amber: #f59e0b;
+    --purple: #8b5cf6;
+    --red: #ef4444;
+    --text: #e2e8f0;
+    --text-dim: #64748b;
+    --text-mid: #94a3b8;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    padding: 40px 32px;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 20% 10%, rgba(59,130,246,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 80%, rgba(6,182,212,0.04) 0%, transparent 60%);
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+  .header h1 {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, #e2e8f0, #3b82f6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+  }
+  .header p {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .legend {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-mid);
+  }
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 2px;
+  }
+
+  .arch {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+    max-width: 1100px;
+    margin: 0 auto 32px;
+  }
+
+  .layer {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+    transition: border-color 0.2s;
+  }
+  .layer:hover { border-color: #2e4a6e; }
+
+  .layer-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .layer-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .service {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    position: relative;
+    transition: all 0.2s;
+  }
+  .service:last-child { margin-bottom: 0; }
+  .service:hover {
+    background: #1f2d44;
+    border-color: #2e4a6e;
+    transform: translateX(2px);
+  }
+
+  .service-icon {
+    width: 32px; height: 32px;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .service-info { flex: 1; min-width: 0; }
+  .service-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+  .service-desc {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    align-self: flex-start;
+    margin-top: 1px;
+  }
+  .tag-lambda { background: rgba(245,158,11,0.15); color: var(--amber); border: 1px solid rgba(245,158,11,0.3); }
+  .tag-eks { background: rgba(59,130,246,0.15); color: var(--blue); border: 1px solid rgba(59,130,246,0.3); }
+  .tag-managed { background: rgba(16,185,129,0.15); color: var(--green); border: 1px solid rgba(16,185,129,0.3); }
+  .tag-iac { background: rgba(139,92,246,0.15); color: var(--purple); border: 1px solid rgba(139,92,246,0.3); }
+
+  /* Flow arrows section */
+  .flow {
+    max-width: 1100px;
+    margin: 0 auto 32px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px 28px;
+  }
+  .flow-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    margin-bottom: 20px;
+  }
+  .flow-steps {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+  .flow-step {
+    flex: 1;
+    min-width: 120px;
+    text-align: center;
+    position: relative;
+  }
+  .flow-step:not(:last-child)::after {
+    content: '→';
+    position: absolute;
+    right: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--blue-dim);
+    font-size: 20px;
+    z-index: 1;
+  }
+  .flow-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 8px;
+    margin: 0 12px;
+    height: 100%;
+  }
+  .flow-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--blue);
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .flow-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+    line-height: 1.3;
+  }
+  .flow-tech {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--text-dim);
+  }
+
+  /* Callout */
+  .callout {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .callout-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    border-left: 3px solid var(--blue);
+  }
+  .callout-card.green { border-left-color: var(--green); }
+  .callout-card h3 {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: var(--text);
+  }
+  .callout-card ul {
+    list-style: none;
+  }
+  .callout-card ul li {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-mid);
+    padding: 3px 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    line-height: 1.5;
+  }
+  .callout-card ul li::before {
+    content: '▸';
+    color: var(--blue);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .callout-card.green ul li::before { color: var(--green); }
+
+  /* Terraform banner */
+  .terraform-banner {
+    max-width: 1100px;
+    margin: 0 auto 20px;
+    background: linear-gradient(135deg, rgba(139,92,246,0.1), rgba(59,130,246,0.08));
+    border: 1px solid rgba(139,92,246,0.25);
+    border-radius: 10px;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .terraform-banner .icon { font-size: 20px; }
+  .terraform-banner p {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-mid);
+  }
+  .terraform-banner strong { color: var(--purple); }
+
+  @media (max-width: 800px) {
+    .arch { grid-template-columns: 1fr; }
+    .callout { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>PE AIOps — Platform Architecture</h1>
+  <p>Component Placement · Lambda vs EKS · Data Flow</p>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div>Lambda (serverless)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div>EKS (Kubernetes)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div>Managed AWS Service</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#8b5cf6"></div>Terraform IaC</div>
+</div>
+
+<div class="terraform-banner">
+  <div class="icon">🏗️</div>
+  <p><strong>Terraform manages everything below</strong> — VPC, subnets, IAM roles, EKS cluster, S3 buckets, DynamoDB tables, OpenSearch domain. All infrastructure is version-controlled and reproducible.</p>
+</div>
+
+<div class="arch">
+
+  <!-- Column 1: Ingestion Layer -->
+  <div class="layer">
+    <div class="layer-label">① Ingestion Layer</div>
+
+    <div class="service">
+      <div class="service-icon" style="background:rgba(245,158,11,0.15)">📥</div>
+      <div class="service-info">
+        <div class="service-name">Vendor Feed Receiver</div>
+        <div class="service-desc">S3 bucket — vendor drops pricing, NAV, position files here on schedule</div>
+      </div>
+      <span class="tag tag-managed">S3</span>
+    </div>
+
+    <div class="service">
+      <div class="service-icon" style="background:rgba(245,158,11,0.15)">⚡</div>
+      <div class="service-info">
+        <div class="service-name">Feed Validator</div>
+        <div class="service-desc">S3 trigger → validates schema, checks for missing fields, detects stale timestamps</div>
+      </div>
+      <span class="tag tag-lambda">Lambda</span>
+    </div>
+
+    <div class="service">
+      <div class="service-icon" style="background:rgba(245,158,11,0.15)">🔍</div>
+      <div class="service-info">
+        <div class="service-name">Anomaly Detector</div>
+        <div class="service-desc">Price spike detection, late feed alerts, position mismatch flags — fires before EOD</div>
+      </div>
+      <span class="tag tag-lambda">Lambda</span>
+    </div>
+
+    <div class="service">
+      <div class="service-icon" style="background:rgba(245,158,11,0.15)">📢</div>
+      <div class="service-info">
+        <div class="service-name">Alert Dispatcher</div>
+        <div class="service-desc">SNS → writes anomaly record to DynamoDB + triggers RAG engine downstream</div>
+      </div>
+      <span class="tag tag-lambda">Lambda</span>
+    </div>
+  </div>
+
+  <!-- Column 2: AI Engine -->
+  <div class="layer">
+    <div class="layer-label">② AI Engine</div>
+
+    <div class="service">
+      <div class="service-icon" style="background:rgba(6,182,212,0.15)">🗄️</div>
+      <div class="service-info">
+        <div class="service-name">Incident Knowledge Base</div>
+        <div class="service-desc">DynamoDB stores all historical reconciliation breaks + resolutions from your SEG experience</div>
+      </div>
+      <span class="tag tag-managed">DynamoDB</span>
+    </div>
+
+    <div class="service">
+      <div class="service-icon" style="background:rgba(59,130,246,0.15)">🔎</div>
+      <div class="service-info">
+        <div class="service-name">RAG Orchestrator</div>
+        <div class="service-desc">Long-running service: pulls live break → searches vector store → assembles context for LLM</div>
+      </div>
+      <span class="tag tag-eks">EKS Pod</span>
+    </div>
+
+    <div class="service">
+      <div class="service-icon" style="background:rgba(16,185,129,0.15)">🧠</div>
+      <div class="service-info">
+        <div class="service-name">Vector Search</div>
+        <div class="service-desc">OpenSearch with Titan Embeddings — finds top-3 historically similar breaks by semantic similarity</div>
+      </div>
+      <span class="tag tag-managed">OpenSearch</span>
+    </div>
+
+    <div class="service">
+      <div class="service-icon" style="background:rgba(16,185,129,0.15)">🤖</div>
+      <div class="service-info">
+        <div class="service-name">Bedrock Claude</div>
+        <div class="service-desc">Receives: live break + top-3 historical matches + deployment history → returns root cause + fix</div>
+      </div>
+      <span class="tag tag-managed">Bedrock</span>
+    </div>
+  </div>
+
+  <!-- Column 3: Platform & Observability -->
+  <div class="layer">
+    <div class="layer-label">③ Platform & Observability</div>
+
+    <div class="service">
+      <div class="service-icon" style="background:rgba(59,130,246,0.15)">📊</div>
+      <div class="service-info">
+        <div class="service-name">Prometheus</div>
+        <div class="service-desc">Scrapes metrics from RAG service pods — latency, queue depth, Bedrock call rate</div>
+      </div>
+      <span class="tag tag-eks">EKS Pod</span>
+    </div>
+
+    <div class="service">
+      <div class="service-icon" style="background:rgba(59,130,246,0.15)">📈</div>
+      <div class="service-info">
+        <div class="service-name">Grafana</div>
+        <div class="service-desc">Dashboards: feed health, break rates, AI resolution times, EOD SLO compliance</div>
+      </div>
+      <span class="tag tag-eks">EKS Pod</span>
+    </div>
+
+    <div class="service">
+      <div class="service-icon" style="background:rgba(245,158,11,0.15)">📋</div>
+      <div class="service-info">
+        <div class="service-name">Fluent Bit</div>
+        <div class="service-desc">Ships all pod logs → CloudWatch for centralised log retention and audit trail</div>
+      </div>
+      <span class="tag tag-eks">DaemonSet</span>
+    </div>
+
+    <div class="service">
+      <div class="service-icon" style="background:rgba(245,158,11,0.15)">🔔</div>
+      <div class="service-info">
+        <div class="service-name">Notification Service</div>
+        <div class="service-desc">Formats AI output → Slack (known breaks) or PagerDuty (unknown breaks needing escalation)</div>
+      </div>
+      <span class="tag tag-lambda">Lambda</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- Data Flow -->
+<div class="flow">
+  <div class="flow-title">End-to-End Data Flow — EOD Reconciliation Break Scenario</div>
+  <div class="flow-steps">
+    <div class="flow-step">
+      <div class="flow-box">
+        <div class="flow-num">01</div>
+        <div class="flow-label">Vendor Feed Arrives</div>
+        <div class="flow-tech">S3 PUT event</div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-box">
+        <div class="flow-num">02</div>
+        <div class="flow-label">Lambda Validates</div>
+        <div class="flow-tech">Schema + anomaly check</div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-box">
+        <div class="flow-num">03</div>
+        <div class="flow-label">Break Detected</div>
+        <div class="flow-tech">SNS → DynamoDB</div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-box">
+        <div class="flow-num">04</div>
+        <div class="flow-label">RAG Pod Triggered</div>
+        <div class="flow-tech">EKS service wakes</div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-box">
+        <div class="flow-num">05</div>
+        <div class="flow-label">History Searched</div>
+        <div class="flow-tech">OpenSearch vector query</div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-box">
+        <div class="flow-num">06</div>
+        <div class="flow-label">AI Analysis</div>
+        <div class="flow-tech">Bedrock Claude</div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-box">
+        <div class="flow-num">07</div>
+        <div class="flow-label">Alert Sent</div>
+        <div class="flow-tech">Slack / PagerDuty</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Callouts -->
+<div class="callout">
+  <div class="callout-card">
+    <h3>🔵 Why EKS — Honest Reasons</h3>
+    <ul>
+      <li>RAG Orchestrator is a <strong>long-running stateful service</strong> — Lambda 15min limit doesn't fit</li>
+      <li>Prometheus + Grafana are <strong>Kubernetes-native</strong> — this is genuinely their home</li>
+      <li>EKS gives you <strong>HPA</strong> — auto-scale RAG pods during EOD crunch automatically</li>
+      <li>Fluent Bit as a <strong>DaemonSet</strong> collects logs from every node automatically</li>
+      <li>GitOps via ArgoCD — <strong>git push = deployment</strong>, audit trail for compliance</li>
+    </ul>
+  </div>
+  <div class="callout-card green">
+    <h3>🟡 Why Lambda — Also Honest</h3>
+    <ul>
+      <li>Feed validation is <strong>event-driven</strong> — fires on S3 arrival, idle otherwise</li>
+      <li>Anomaly detection runs <strong>per-file</strong>, not continuously — Lambda is cheaper</li>
+      <li>Alert dispatcher is a <strong>simple HTTP call</strong> — no reason to containerise it</li>
+      <li>SNS fan-out is <strong>fully managed</strong> — no infrastructure to maintain</li>
+      <li>Cost: Lambda for these functions = <strong>near zero</strong> vs running extra pods on EKS</li>
+    </ul>
+  </div>
+</div>
+
+</body>
+</html>

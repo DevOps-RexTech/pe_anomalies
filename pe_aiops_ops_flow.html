@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PE AIOps — Ops Flow</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap');
+
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --border: #1e2d45;
+    --blue: #3b82f6;
+    --cyan: #06b6d4;
+    --green: #10b981;
+    --amber: #f59e0b;
+    --purple: #8b5cf6;
+    --red: #ef4444;
+    --orange: #f97316;
+    --text: #e2e8f0;
+    --text-dim: #64748b;
+    --text-mid: #94a3b8;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    padding: 36px 32px;
+    background-image:
+      radial-gradient(ellipse 80% 40% at 15% 10%, rgba(59,130,246,0.05) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 85% 85%, rgba(16,185,129,0.04) 0%, transparent 60%);
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  .header h1 {
+    font-size: 26px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #e2e8f0, #3b82f6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 6px;
+  }
+  .header p {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  /* MODE CARDS ROW */
+  .modes {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    max-width: 1100px;
+    margin: 0 auto 36px;
+  }
+
+  .mode-card {
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .mode-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .mode-card.warning::before { background: var(--amber); }
+  .mode-card.analysis::before { background: var(--blue); }
+  .mode-card.escalation::before { background: var(--red); }
+
+  .mode-card.warning { background: linear-gradient(135deg, #1a1800, #111827); border-color: rgba(245,158,11,0.2); }
+  .mode-card.analysis { background: linear-gradient(135deg, #001020, #111827); border-color: rgba(59,130,246,0.2); }
+  .mode-card.escalation { background: linear-gradient(135deg, #1a0800, #111827); border-color: rgba(239,68,68,0.2); }
+
+  .mode-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .mode-card.warning .mode-num { color: var(--amber); }
+  .mode-card.analysis .mode-num { color: var(--blue); }
+  .mode-card.escalation .mode-num { color: var(--red); }
+
+  .mode-title {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: var(--text);
+  }
+  .mode-subtitle {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-bottom: 14px;
+  }
+  .mode-steps {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .mode-steps li {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-mid);
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    line-height: 1.5;
+  }
+  .mode-steps li .step-num {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 700;
+    margin-top: 0px;
+  }
+  .mode-card.warning .step-num { background: rgba(245,158,11,0.2); color: var(--amber); }
+  .mode-card.analysis .step-num { background: rgba(59,130,246,0.2); color: var(--blue); }
+  .mode-card.escalation .step-num { background: rgba(239,68,68,0.2); color: var(--red); }
+
+  .mode-outcome {
+    margin-top: 14px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    line-height: 1.5;
+  }
+  .mode-card.warning .mode-outcome { background: rgba(245,158,11,0.08); color: var(--amber); border: 1px solid rgba(245,158,11,0.15); }
+  .mode-card.analysis .mode-outcome { background: rgba(59,130,246,0.08); color: #7eb8f7; border: 1px solid rgba(59,130,246,0.15); }
+  .mode-card.escalation .mode-outcome { background: rgba(239,68,68,0.08); color: #f9a8a8; border: 1px solid rgba(239,68,68,0.15); }
+
+  /* FULL FLOW DIAGRAM */
+  .flow-section {
+    max-width: 1100px;
+    margin: 0 auto 32px;
+  }
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  .flow-diagram {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+  }
+
+  /* vertical flow */
+  .vflow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+
+  .fnode {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 20px;
+    min-width: 260px;
+    max-width: 340px;
+    text-align: center;
+    position: relative;
+  }
+  .fnode-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 3px;
+  }
+  .fnode-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+  }
+  .fnode.highlight-amber { border-color: rgba(245,158,11,0.4); background: rgba(245,158,11,0.06); }
+  .fnode.highlight-blue { border-color: rgba(59,130,246,0.4); background: rgba(59,130,246,0.06); }
+  .fnode.highlight-green { border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.06); }
+  .fnode.highlight-purple { border-color: rgba(139,92,246,0.4); background: rgba(139,92,246,0.06); }
+
+  .arrow-down {
+    width: 2px;
+    height: 28px;
+    background: var(--border);
+    margin: 0 auto;
+    position: relative;
+  }
+  .arrow-down::after {
+    content: '▼';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--text-dim);
+    font-size: 10px;
+  }
+
+  /* decision diamond */
+  .decision {
+    width: 200px;
+    height: 64px;
+    background: var(--surface2);
+    border: 1px solid rgba(139,92,246,0.4);
+    transform: rotate(0deg);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+    background: rgba(139,92,246,0.1);
+  }
+  .decision-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .decision-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--purple);
+    text-align: center;
+    line-height: 1.3;
+  }
+
+  /* branch layout */
+  .branch-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    width: 100%;
+    justify-content: center;
+    margin-top: 0;
+  }
+
+  .branch {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 340px;
+  }
+
+  .branch-line-h {
+    height: 2px;
+    background: var(--border);
+    width: 100%;
+  }
+  .branch-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    font-weight: 700;
+  }
+  .branch-label.yes { background: rgba(16,185,129,0.15); color: var(--green); }
+  .branch-label.no { background: rgba(239,68,68,0.15); color: var(--red); }
+
+  .branch-connector {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* horizontal connector between branches */
+  .h-connector {
+    display: flex;
+    align-items: flex-start;
+    width: 100%;
+    max-width: 720px;
+  }
+  .h-line {
+    flex: 1;
+    height: 2px;
+    background: var(--border);
+    margin-top: 32px;
+  }
+  .v-drop {
+    width: 2px;
+    background: var(--border);
+    align-self: stretch;
+  }
+
+  /* outcome boxes */
+  .outcome {
+    border-radius: 10px;
+    padding: 14px 16px;
+    width: 100%;
+    max-width: 300px;
+    margin: 0 16px;
+  }
+  .outcome.green-out {
+    background: rgba(16,185,129,0.08);
+    border: 1px solid rgba(16,185,129,0.3);
+  }
+  .outcome.red-out {
+    background: rgba(239,68,68,0.08);
+    border: 1px solid rgba(239,68,68,0.3);
+  }
+  .outcome-who {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+  .outcome.green-out .outcome-who { color: var(--green); }
+  .outcome.red-out .outcome-who { color: var(--red); }
+  .outcome-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .outcome-desc {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-mid);
+    line-height: 1.5;
+  }
+
+  /* MTTR comparison */
+  .mttr-row {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+  }
+  .mttr-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    text-align: center;
+  }
+  .mttr-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+  .mttr-value {
+    font-size: 32px;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .mttr-desc {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  @media (max-width: 800px) {
+    .modes { grid-template-columns: 1fr; }
+    .mttr-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>PE AIOps — How Ops Uses It</h1>
+  <p>3 Usage Modes · Decision Flow · MTTR Impact</p>
+</div>
+
+<!-- 3 MODE CARDS -->
+<div class="modes">
+
+  <div class="mode-card warning">
+    <div class="mode-num">Mode 01 · Early Warning</div>
+    <div class="mode-title">Detection Before Break</div>
+    <div class="mode-subtitle">Catch it at ingestion, not at EOD</div>
+    <ul class="mode-steps">
+      <li><span class="step-num">1</span>Vendor feed arrives in S3</li>
+      <li><span class="step-num">2</span>Lambda validates schema, timestamps, completeness</li>
+      <li><span class="step-num">3</span>Anomaly flagged — missing securities, late arrival, price spike</li>
+      <li><span class="step-num">4</span>Slack alert fires to ops team immediately</li>
+      <li><span class="step-num">5</span>Ops chases vendor OR uses fallback data with flag</li>
+    </ul>
+    <div class="mode-outcome">✓ Problem resolved before reconciliation even runs — no break at all</div>
+  </div>
+
+  <div class="mode-card analysis">
+    <div class="mode-num">Mode 02 · Break Analysis</div>
+    <div class="mode-title">Root Cause in 5 Minutes</div>
+    <div class="mode-subtitle">Known pattern → instant resolution</div>
+    <ul class="mode-steps">
+      <li><span class="step-num">1</span>Reconciliation break detected at EOD</li>
+      <li><span class="step-num">2</span>RAG engine searches historical incident database</li>
+      <li><span class="step-num">3</span>Finds matching pattern from Oct 2023 — Bloomberg corp action lag</li>
+      <li><span class="step-num">4</span>Bedrock generates: root cause + exact resolution steps</li>
+      <li><span class="step-num">5</span>Junior ops applies fix — no senior escalation needed</li>
+    </ul>
+    <div class="mode-outcome">✓ MTTR drops from 45 mins to under 5 mins for known patterns</div>
+  </div>
+
+  <div class="mode-card escalation">
+    <div class="mode-num">Mode 03 · Smart Escalation</div>
+    <div class="mode-title">Unknown Break Triage</div>
+    <div class="mode-subtitle">New pattern → escalate with full context</div>
+    <ul class="mode-steps">
+      <li><span class="step-num">1</span>Break detected — RAG finds no strong historical match</li>
+      <li><span class="step-num">2</span>Bedrock still generates best-effort analysis with caveats</li>
+      <li><span class="step-num">3</span>PagerDuty fires to senior ops with full AI summary attached</li>
+      <li><span class="step-num">4</span>Senior staff arrive with context — no 20-min briefing needed</li>
+      <li><span class="step-num">5</span>Resolution stored → next time it becomes Mode 02</li>
+    </ul>
+    <div class="mode-outcome">✓ Escalation still happens but senior staff are pre-briefed — saves 20 mins</div>
+  </div>
+
+</div>
+
+<!-- FULL DECISION FLOW -->
+<div class="flow-section">
+  <div class="section-label">End-to-End Decision Flow</div>
+  <div class="flow-diagram">
+    <div style="display:flex; flex-direction:column; align-items:center; gap:0;">
+
+      <!-- Feed arrives -->
+      <div class="fnode highlight-amber">
+        <div class="fnode-title">📥 Vendor Feed Arrives</div>
+        <div class="fnode-sub">S3 PUT event — pricing, NAV, position data</div>
+      </div>
+      <div class="arrow-down"></div>
+      <div style="height:16px"></div>
+
+      <!-- Lambda validates -->
+      <div class="fnode highlight-amber">
+        <div class="fnode-title">⚡ Lambda Validates Feed</div>
+        <div class="fnode-sub">Schema check · timestamp · completeness · price spike detection</div>
+      </div>
+      <div class="arrow-down"></div>
+      <div style="height:16px"></div>
+
+      <!-- Decision 1: anomaly? -->
+      <div style="position:relative; display:flex; flex-direction:column; align-items:center; width:100%;">
+        <div style="background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.35); border-radius:8px; padding:12px 28px; margin-bottom:0;">
+          <div style="font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700; color:var(--amber); text-align:center;">Anomaly Detected in Feed?</div>
+        </div>
+
+        <!-- branches from anomaly decision -->
+        <div style="display:flex; width:100%; max-width:700px; align-items:flex-start; margin-top:0;">
+          <!-- YES branch -->
+          <div style="flex:1; display:flex; flex-direction:column; align-items:center;">
+            <div style="width:2px; height:24px; background:rgba(245,158,11,0.4);"></div>
+            <span class="branch-label yes">YES</span>
+            <div class="fnode" style="border-color:rgba(245,158,11,0.3); background:rgba(245,158,11,0.05); max-width:260px;">
+              <div class="fnode-title" style="font-size:12px;">🔔 Slack Early Warning</div>
+              <div class="fnode-sub">Ops team alerted before EOD recon runs</div>
+            </div>
+            <div style="width:2px; height:20px; background:rgba(245,158,11,0.4); margin-top:4px;"></div>
+            <div style="background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:10px 14px; max-width:260px; text-align:center;">
+              <div style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--green); font-weight:700;">✓ MODE 01 COMPLETE</div>
+              <div style="font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--text-dim); margin-top:4px;">Break prevented at ingestion</div>
+            </div>
+          </div>
+
+          <!-- vertical divider -->
+          <div style="width:40px; display:flex; align-items:center; justify-content:center; padding-top:24px;">
+            <div style="width:1px; height:80px; background:var(--border);"></div>
+          </div>
+
+          <!-- NO branch -->
+          <div style="flex:1; display:flex; flex-direction:column; align-items:center;">
+            <div style="width:2px; height:24px; background:rgba(59,130,246,0.4);"></div>
+            <span class="branch-label" style="background:rgba(100,116,139,0.15); color:var(--text-dim);">NO — Feed OK</span>
+            <div class="fnode" style="max-width:260px;">
+              <div class="fnode-title" style="font-size:12px;">⚙️ Reconciliation Runs</div>
+              <div class="fnode-sub">Normal EOD recon process executes</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="width:2px; height:28px; background:rgba(59,130,246,0.4); margin-top:4px;"></div>
+      <div style="height:8px;"></div>
+
+      <!-- Decision 2: recon break? -->
+      <div style="background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.35); border-radius:8px; padding:12px 28px;">
+        <div style="font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700; color:var(--blue); text-align:center;">Reconciliation Break Detected?</div>
+      </div>
+
+      <div style="display:flex; width:100%; max-width:700px; align-items:flex-start; margin-top:0;">
+        <!-- NO — clean -->
+        <div style="flex:1; display:flex; flex-direction:column; align-items:center;">
+          <div style="width:2px; height:24px; background:rgba(16,185,129,0.4);"></div>
+          <span class="branch-label yes">NO — Clean</span>
+          <div style="background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:10px 14px; max-width:240px; text-align:center;">
+            <div style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--green); font-weight:700;">✓ EOD Complete</div>
+            <div style="font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--text-dim); margin-top:4px;">Grafana dashboard updates green</div>
+          </div>
+        </div>
+
+        <div style="width:40px; display:flex; align-items:center; justify-content:center; padding-top:24px;">
+          <div style="width:1px; height:80px; background:var(--border);"></div>
+        </div>
+
+        <!-- YES — break -->
+        <div style="flex:1; display:flex; flex-direction:column; align-items:center;">
+          <div style="width:2px; height:24px; background:rgba(239,68,68,0.4);"></div>
+          <span class="branch-label no">YES — Break</span>
+          <div class="fnode highlight-blue" style="max-width:260px;">
+            <div class="fnode-title" style="font-size:12px;">🧠 RAG Engine Triggered</div>
+            <div class="fnode-sub">Searches historical incident DB via OpenSearch vector query</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="width:2px; height:28px; background:rgba(139,92,246,0.4); margin-top:4px;"></div>
+      <div style="height:8px;"></div>
+
+      <!-- Decision 3: known pattern? -->
+      <div style="background:rgba(139,92,246,0.1); border:1px solid rgba(139,92,246,0.35); border-radius:8px; padding:12px 28px;">
+        <div style="font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700; color:var(--purple); text-align:center;">Historical Match Found? (similarity &gt; threshold)</div>
+      </div>
+
+      <div style="display:flex; width:100%; max-width:700px; align-items:flex-start; margin-top:0;">
+        <!-- YES — known -->
+        <div style="flex:1; display:flex; flex-direction:column; align-items:center;">
+          <div style="width:2px; height:24px; background:rgba(16,185,129,0.4);"></div>
+          <span class="branch-label yes">YES — Known Pattern</span>
+          <div class="fnode" style="border-color:rgba(16,185,129,0.3); background:rgba(16,185,129,0.05); max-width:280px;">
+            <div class="fnode-title" style="font-size:12px;">🤖 Bedrock Generates Fix</div>
+            <div class="fnode-sub">Root cause + resolution steps → Slack to junior ops</div>
+          </div>
+          <div style="width:2px; height:16px; background:rgba(16,185,129,0.4); margin-top:4px;"></div>
+          <div style="background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:10px 14px; max-width:260px; text-align:center;">
+            <div style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--green); font-weight:700;">✓ MODE 02 — MTTR ~5 mins</div>
+            <div style="font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--text-dim); margin-top:4px;">Junior ops resolves, no escalation</div>
+          </div>
+        </div>
+
+        <div style="width:40px; display:flex; align-items:center; justify-content:center; padding-top:24px;">
+          <div style="width:1px; height:120px; background:var(--border);"></div>
+        </div>
+
+        <!-- NO — unknown -->
+        <div style="flex:1; display:flex; flex-direction:column; align-items:center;">
+          <div style="width:2px; height:24px; background:rgba(239,68,68,0.4);"></div>
+          <span class="branch-label no">NO — New Pattern</span>
+          <div class="fnode" style="border-color:rgba(239,68,68,0.3); background:rgba(239,68,68,0.05); max-width:280px;">
+            <div class="fnode-title" style="font-size:12px;">🚨 PagerDuty + AI Summary</div>
+            <div class="fnode-sub">Best-effort analysis attached — senior ops pre-briefed on arrival</div>
+          </div>
+          <div style="width:2px; height:16px; background:rgba(239,68,68,0.4); margin-top:4px;"></div>
+          <div style="background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.3); border-radius:8px; padding:10px 14px; max-width:260px; text-align:center;">
+            <div style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--red); font-weight:700;">MODE 03 — Escalate Smart</div>
+            <div style="font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--text-dim); margin-top:4px;">Stored → becomes Mode 02 next time</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MTTR IMPACT -->
+<div class="flow-section" style="margin-bottom:0;">
+  <div class="section-label">Business Impact</div>
+  <div class="mttr-row">
+    <div class="mttr-card">
+      <div class="mttr-label">Before — Manual Process</div>
+      <div class="mttr-value" style="color:var(--red);">45 min</div>
+      <div class="mttr-desc">Senior staff manually dig through logs, piece together root cause, brief the team</div>
+    </div>
+    <div class="mttr-card">
+      <div class="mttr-label">After — Known Pattern (Mode 02)</div>
+      <div class="mttr-value" style="color:var(--green);">&lt; 5 min</div>
+      <div class="mttr-desc">RAG matches history, Bedrock generates fix, junior ops resolves without escalation</div>
+    </div>
+    <div class="mttr-card">
+      <div class="mttr-label">After — Unknown Pattern (Mode 03)</div>
+      <div class="mttr-value" style="color:var(--amber);">~20 min</div>
+      <div class="mttr-desc">Escalation still happens but senior staff arrive pre-briefed — saves the 20-min catch-up</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
